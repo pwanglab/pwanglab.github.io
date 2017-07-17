@@ -38,7 +38,24 @@
 			<p align="left" style="margin:1px;font-size:17px;">&nbsp&nbsp (1) 基因组创新与适应在当前世界各地如何形成茄科的多样性.</p>
 			<p align="left" style="margin:1px;font-size:17px;">&nbsp&nbsp (2) 是什么使Anacardiaceae植物在其水果和植物体内积累的天然产物如此独特，我们如何改变基因组成分，以避免产生危险的代谢物.</p>
 			<p align="left" style="margin:1px;font-size:17px;">&nbsp&nbsp (3) 基因组进化如何促进真核生物特征的出现和创新.</p>
-			<p align="justify" style="margin:1px;font-size:17px;">&nbsp&nbsp 如果想了解更多信息，请联系我们。</p>
+			<p align="justify" style="margin:1px;font-size:17px;">&nbsp&nbsp 如果想了解更多信息，请联系我们：</p>
+			<br/>
+				<div style="float:left;margin-right:5%;">
+					<div id="container" class="container">
+					<img src="wpwx.jpg" style="weight:15vh;height:15vh;"></img>
+					</div>
+				</div>
+				<div>
+					<p align="justify" style="margin:1px;font-size:15px">地址：中国海南省儋州市宝岛新村热带作物品种资源研究所
+					<p align="justify" style="margin:1px;font-size:15px">Email: pwang@catas.cn</p>
+					<p align="justify" style="margin:1px;font-size:15px">Tel: +86-898-23301010</p>
+					<br/>
+					<br/>
+				</div>
+					<div id="popup" style="position: fixed;left: 0px; top: 0px;width: 100%;height: 100%;text-align: center;display: none;">
+					<div class="bg" style="background-color: rgba(0,0,0,0.5);width: 100%;height: 100%;"><img src="" alt="" style="padding-top:15vh"/></div>
+					</div>
+		</div>
 		</div>
 	</div>
 </body>
@@ -76,4 +93,24 @@ function showDivs(n) {
   }
   x[slideIndex-1].style.display = "block";  
 }
+
+//img showbig
+	var imgs = document.getElementById("container").getElementsByTagName("img");
+    var lens = imgs.length;
+    var popup = document.getElementById("popup");
+
+    for(var i = 0; i < lens; i++){
+        imgs[i].onclick = function (event){
+            event = event||window.event;
+            var target = document.elementFromPoint(event.clientX, event.clientY);
+            showBig(target.src);
+        }
+    }
+    popup.onclick = function (){
+        popup.style.display = "none";
+    }
+    function showBig(src){
+        popup.getElementsByTagName("img")[0].src = src;
+        popup.style.display = "block";
+    }
 </script>

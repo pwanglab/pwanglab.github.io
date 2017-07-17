@@ -37,6 +37,22 @@
 			<p align="left" style="margin:1px;font-size:15px;">&nbsp&nbsp&nbsp&nbsp (2) What made Anacardiaceae plants so unique in their fruits and natural products accumulated in the plant bodies, and how can we alter genomic compositions to avoid production of hazardous metabolites?</p>
 			<p align="left" style="margin:1px;font-size:15px;">&nbsp&nbsp&nbsp&nbsp (3) How genome evolution facilitated emergence and innovation of traits in eukaryotes.</p>
 			<p align="justify" style="margin:1px;font-size:15px;">&nbsp&nbsp&nbsp&nbsp  For more information, please contact us.</p>
+			
+			<br/>
+				<div style="float:left;margin-right:5%;">
+					<div id="container" class="container">
+					<img src="wpwx.jpg" style="weight:15vh;height:15vh;"></img>
+					</div>
+				</div>
+				<div>
+					<p align="justify" style="margin:1px;font-size:15px">Add: Tropical Crops Genetic Resources Institute Baodao New Village, Danzhou, Hainan 571737, China
+					<p align="justify" style="margin:1px;font-size:15px">Email: pwang@catas.cn</p>
+					<p align="justify" style="margin:1px;font-size:15px">Tel: +86-898-23301010</p>
+					<br/>
+				</div>
+					<div id="popup" style="position: fixed;left: 0px; top: 0px;width: 100%;height: 100%;text-align: center;display: none;">
+					<div class="bg" style="background-color: rgba(0,0,0,0.5);width: 100%;height: 100%;"><img src="" alt="" style="padding-top:15vh"/></div>
+					</div>
 		</div>
 	</div>
 </body>
@@ -74,4 +90,24 @@ function showDivs(n) {
   }
   x[slideIndex-1].style.display = "block";  
 }
+
+//img showbig
+	var imgs = document.getElementById("container").getElementsByTagName("img");
+    var lens = imgs.length;
+    var popup = document.getElementById("popup");
+
+    for(var i = 0; i < lens; i++){
+        imgs[i].onclick = function (event){
+            event = event||window.event;
+            var target = document.elementFromPoint(event.clientX, event.clientY);
+            showBig(target.src);
+        }
+    }
+    popup.onclick = function (){
+        popup.style.display = "none";
+    }
+    function showBig(src){
+        popup.getElementsByTagName("img")[0].src = src;
+        popup.style.display = "block";
+    }
 </script>
