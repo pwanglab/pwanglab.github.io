@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	</head>
+<body style="background:#ffffff;">
+	<div style="margin: 0 auto;weight:wrap;height:100vh;>
+		<br/>
+		<a href="../home_pc.html" style="height:150px;margin-left:15%;"><img src="../logo.png"></img></a>
+		<!-- <a href="https://pwang521.github.io/pengwang/" style="font-size:50px;color:#A2b4BA; text-decoration: none;">Peng Wang Lab</a> -->
+		<a href=".\codes_cn.html"style="float:right;margin-top:10px;margin-right:10px;text-decoration:none;color:#eb3f2f;font-family:MV boli;">Chinese</a>
+		<nav style="margin: 0 auto; width: wrap; text-align: center;margin-top:20px">
+			<ul style="padding: 0px; list-style: none; font-weight: bold; margin: auto; margin-bottom: 20px;">
+				<a href="..\research\research.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none;font-size:">Research</a>
+				<a href="..\publications\publications.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">Publications</a>
+				<a href="..\people\people.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">People</a>
+				<a href=".\codes.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">Codes</a>
+			</ul>
+		</nav>
+		<pre style="background:#C9CABB;margin-left:5%;margin-right:5%;">
+		<code>
+		#!/usr/bin/perl
+		@clean_left= glob("../../clean/*\_1_paired.fastq");
+		@clean_right= glob ("../../clean/*\_2_paired.fastq");
+		$trinity_dir="../unigene";
+		$unigene="../unigene/unigene.fasta";
+		$outunigene="../unigene/outunigene.fasta";
+		$trinity_home="/home/xiuxu/trinity";
+		@all_kallisto=glob("$trinity_dir/kallisto*\/abundance.tsv");
+		$matrix_TMM="$trintiy_dir/transcripts.TMM.EXPR.matrix";
+		$matrix="$trinity_dir/trans_counts.counts.matrix";
+		$transdecoder_pep="$trinity_dir/outunigene.fasta.transdecoder_dir/longest_orfs.pep";
+		$tsqlite="$trinity_dir/Trinotate.sqlite";
+		@all_trinity="../trinity*\/Trinity.fasta";
+		$blastdb_dir="/disk2/dbset/blastdb/";
+		$blastout="../unigene/blastout.fasta";
+
+		#tgicl filter
+		unlink "../all_trinity" if (-e "../all_trinity");
+		mkdir "../all_trinity";
+		system "cat @all_trinity > ../all_trinity/all.trinity.fasta";
+		system "tgicl -F ../all_trinity/all.trinity.fasta";
+		system "rm -r ../unigene" if (-d "../unigene");
+		mkdir "../unigene";
+		system "cat asm_1/contigs asm_1/singlets > $unigene";
+		# make The sequence in the unigene.fasta can use Trinity
+		open (data,"$unigene");
+		unlink "$outunigene" if (-e "$outunigene");
+		open (out,">>$outunigene");
+		$i=1;
+		while($line=<data>)
+		{
+		   if($line =~ "CL")
+		  {
+			$line =~ s/CL/TRINITY_DN0$i\_c0_g1_i1 /;
+			$i++;
+		  }
+		  print out $line;
+		}
+		close(data);close(out);
+
+		# The Transcriptome Contig Nx Statistic
+		system "$trinity_home/util/TrinityStats.pl $outunigene > $trinity_dir/N50.txt";
+
+		#Estimating Transcript Abundance with kallisto
+		for($i=1;$i<=$#clean_left;$i++){
+		#system "echo 123456 | sudo -S rm -r $trinity_dir/kallisto$j" if (-d "$trinity_dir/kallisto$i");
+		  system "$trinity_home/util/align_and_estimate_abundance.pl --transcripts $outunigene  --seqType fq \
+		  --left $clean_left[$i] --right $clean_right[$i] --est_method kallisto --aln_method bowtie2 --prep_reference \
+		  --thread_count 20 --output_dir $trinity_dir/kallisto$i";
+		}
+		  system "echo 123456 | sudo -S $trinity_home/util/abundance_estimates_to_matrix.pl --est_method kallisto \
+		  --out_prefix $trinity_dir/trans_couts --name_sample_by_basedir @all_kallisto";
+
+		#Contig Ex90N50 Statistic Transcript Count
+		system "$trinity_home/util/misc/contig_ExN50_statistic.pl $matrix_TMM $outunigene | tee $trinity_dir/ExN50.stats";
+
+		#RNA Seq Read Representation by Trinity Assembly
+		system "bowtie2-build $outunigene $outunigene";
+		system "bowtie2 --local --no-unal -x $outunigene -q -1 ../../clean/all_1.fastq -2 ../../clean/all_2.fastq -p 20 
+		| samtools view -Sb -@ 20 | samtools sort -@ 20 -m 100G -n -o $trinity_dir/bowtie2.bam";
+		#Read bowtie2.bam
+		system "$trinity_home/util/SAM_nameSorted_to_uniq_count_stats.pl $trinity_dir/bowtie2.bam > $trinity_dir/bowtie2.txt";
+
+		#BUSCO Integrity testing
+		system "python /home/xiuxu/busco/BUSCO.py -o $trinity_dir/busco --in $outunigene \
+		-l /home/xiuxu/busco/karyota/embryophyta_odb9 -m transcriptome -c 20";
+
+		#-------------------------------------------
+		#outunigene.fasta Functional Annotation
+		#-------------------------------------------
+		#Coding Region Identification in Trinity Assemblies
+		system "$trinity_home/TransDecoder-3.0.0/TransDecoder.LongOrfs -t $outunigene";
+		system "mv outunigene.fasta.transdecoder_dir $trinity_dir/";
+		#Capturing BLAST Homologies
+		system "diamond blastx -d /disk2/dbset/dmnd/uniprot_sprot.dmnd -q $outunigene -f 6 -k 1 -e 1e-5 \
+		-o $trinity_dir/blastx_dmnd.outfmt6";
+		system "diamond blastp -d /disk2/dbset/dmnd/uniprot_sprot.dmnd -q $transdecoder_pep -f 6 -k 1 -e 1e-5 \
+		-o $trinity_dir/blastp_dmnd.outfmt6";
+		system "diamond blastx -d /disk2/dbset/dmnd/swissprot.dmnd -q $outunigene -f 6 -k 1 -e 1e-5 \
+		-o $trinity_dir/blastx_dmnd_swip.outfmt6";
+		system "diamond blastx -d /disk2/dbset/dmnd/cog.dmnd -q $outunigene -f 6 -k 1 -e 1e-5 \
+		-o $trinity_dir/blastx_dmnd_cog.outfmt6";
+		system "diamond blastx -d /disk2/dbset/dmnd/nr.dmnd -q $outunigene -f 6 -k 1 -e 1e-5 \
+		-o $trinity_dir/blastx_dmnd_nr.outfmt6";
+		#Have Trinotate.sqlite
+		system "rm $trinity_dir/Trinotate.sqlite" if (-d "$trinity_dir/Trinotate.sqlite");
+		system "cp $trinity_home/Trinotate-3.0.2/Trinotate.sqlite $trinity_dir/";
+		# Loading Above Results into a Trinotate SQLite Database
+		system "$trinity_home/util/support_scripts/get_Trinity_gene_to_trans_map.pl $outunigene > Trinity.fasta.gene_trans_map";
+		system "Trinotate $tsqlite init --gene_trans_map Trinity.fasta.gene_trans_map \
+		--transcript_fasta $outunigene --transdecoder_pep $transdecoder_pep";
+		#Loading BLAST homologies
+		system "Trinotate $tsqlite LOAD_swissprot_blastx $trinity_dir/blastx_dmnd.outfmt6";
+		system "Trinotate $tsqlite LOAD_swissprot_blastp $trinity_dir/blastp_dmnd.outfmt6";
+		system "Trinotate $tsqlite LOAD_custom_blast --outfmt $trinity_dir/blastx_dmnd_swip.outfmt6 \
+		--prog blastx --dbtype /disk2/dbset/dmnd/swissprot.dmnd";
+		system "Trinotate $tsqlite LOAD_custom_blast --outfmt $trinity_dir/blastx_dmnd_cog.outfmt6 \
+		--prog blastx --dbtype /disk2/dbset/dmnd/cog.dmnd";
+		system "Trinotate $tsqlite LOAD_custom_blast --outfmt $trinity_dir/blastx_dmnd_nr.outfmt6 \
+		--prog blastx --dbtype /disk2/dbset/dmnd/nr.dmnd";
+		#Output an Annotation Report
+		system "Trinotate $tsqlite report > $trinity_dir/trinotate_report.xls";
+		system "$trinity_home/Trinotate/util/Trinotate_get_feature_name_encoding_attributes.pl \
+		 $trinity_dir/trinotate_report.xls > $trinity_dir/annot_feature_map.txt";
+		system "$trinity_home/Analysis/DifferentialExpression/rename_matrix_feature_identifiers.pl \
+		 $matrix $trintiy_dir/annot_feature_map.txt > $trinity_dir/Trinity_trans.counts.wAnnot.matrix";
+
+		#edgeR Differential Expression Analysis
+		system "perl $trinity_home/Analysis/DifferentialExpression/run_DE_analysis.pl --matrix $matrix \
+		--method edgeR --dispersion 0.1 --output $trintiy_dir/edgeR_out";
+
+
+		</code>
+		</pre>
+	</div>
+</body>
+</html>
