@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	</head>
+<body style="background:#ffffff;">
+	<div style="margin: 0 auto;weight:wrap;height:100vh;>
+		<br/>
+		<a href="../home_tele.html" style="height:150px;margin-left:15%;"><img src="../logo.png"></img></a>
+		<nav style="margin: 0 auto; width: wrap; text-align: center;margin-top:20px">
+			<ul style="padding: 0px; list-style: none; font-weight: bold; margin: auto; margin-bottom: 20px;">
+				<a href="..\research\research_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none;font-size:">Research</a>
+				<a href="..\publications\publications_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">Publications</a>
+				<a href="..\people\people_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">People</a>
+				<a href=".\codes_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">Codes</a>
+			</ul>
+		</nav>
+		<pre style="background:#C9CABB;margin-left:5%;margin-right:5%;">
+		<code>
+use File::Slurp;
+system "rm -r new/" if(-d "new/");
+mkdir("new/");
+
+open(OUT1, ">>desctip.txt") or die $!;
+@file = glob("in/*.fa");
+foreach $file(@file)
+{
+	print "$file\n";
+	@word = split(/\//, $file);
+	print OUT1 "$file..\n";
+	open(IN, $file) or die $!;
+	open(OUT, ">>new/$word[1]") or die $!;
+	while($line = <IN>)
+	{		
+		if($line =~ />/)
+		{
+			$line =~ s/>//;
+			@lineword = split(/\:|\s+/, $line);
+			$lineword = $lineword[0];
+			$lineword =~ s/\;//g;		#may vary.								
+			if($file =~ /orysa/)
+			{
+				$lineword =~ s/LOC\_//;
+			}
+			elsif($file =~ /zeama/)
+			{
+				$lineword =~ s/\_P/\_T/;
+			}							
+			print OUT1 $line;
+			print OUT ">$lineword\n";
+		}
+		else
+		{
+			$line =~ s/\*|\||\$|\#//g;
+			print OUT $line;
+		}
+	}
+	close(IN);
+	close(OUT);
+	print OUT1 "\/\/\n";
+}	
+		</code>
+		</pre>
+	</div>
+</body>
+</html>

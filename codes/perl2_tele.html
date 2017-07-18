@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	</head>
+<body style="background:#ffffff;">
+	<div style="margin: 0 auto;weight:wrap;height:100vh;>
+		<br/>
+		<a href="../home_tele.html" style="height:150px;margin-left:15%;"><img src="../logo.png"></img></a>
+		<nav style="margin: 0 auto; width: wrap; text-align: center;margin-top:20px">
+			<ul style="padding: 0px; list-style: none; font-weight: bold; margin: auto; margin-bottom: 20px;">
+				<a href="..\research\research_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none;font-size:">Research</a>
+				<a href="..\publications\publications_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">Publications</a>
+				<a href="..\people\people_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">People</a>
+				<a href=".\codes_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">Codes</a>
+			</ul>
+		</nav>
+		<pre style="background:#C9CABB;margin-left:5%;margin-right:5%;">
+		<code>
+This is for retrieval of cds seqs for PAML calculation. 
+#Two input files:
+#	tree file;
+#	CDS input file.
+#Output file:
+#	output CDS file.
+use File::Slurp;
+
+$tree = "in/tree.txt";
+$pepin = "in/0pep.fa";
+
+unlink("pepnew.fa") if (-e "pepnew.fa");
+open(OUT, ">>pepnew.fa") or die $!;
+
+$pepin = read_file($pepin);
+@seq = split(/>/, $pepin);
+
+$tree = read_file($tree);
+@item = split(/\(|\)|\:|\'|\,|\s+/, $tree);
+@item = grep(/\_\_/, @item);
+
+CYC:foreach $item(@item)
+{
+	@seqnew = grep(/$item/, @seq);
+	if($#seqnew < 0)
+	{
+		print "No seq $item\n";
+	}
+	if($seqnew[0] =~ /Ncr\_|Vda\_|Ztr\_|Uma\_|Cne\_/) #Vary
+	{
+		next CYC;
+	}
+	print OUT ">$seqnew[0]";
+}
+close(OUT);
+
+@pepline = read_file("pepnew.fa");
+
+
+@pepid = grep(/>/, @pepline);
+
+
+@temp {@pepid} = ();
+delete @temp{@cdsid};
+@peponly = keys %temp;
+
+@temp {@cdsid} = ();
+delete @temp{@pepid};
+
+
+if($#peponly >= 0)
+{
+	print "@peponly\n";
+}
+		</code>
+		</pre>
+	</div>
+</body>
+</html>

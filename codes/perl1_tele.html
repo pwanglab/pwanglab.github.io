@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	</head>
+<body style="background:#ffffff;">
+	<div style="margin: 0 auto;weight:wrap;height:100vh;>
+		<br/>
+		<a href="../home_tele.html" style="height:150px;margin-left:15%;"><img src="../logo.png"></img></a>
+		<nav style="margin: 0 auto; width: wrap; text-align: center;margin-top:20px">
+			<ul style="padding: 0px; list-style: none; font-weight: bold; margin: auto; margin-bottom: 20px;">
+				<a href="..\research\research_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none;font-size:">Research</a>
+				<a href="..\publications\publications_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">Publications</a>
+				<a href="..\people\people_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">People</a>
+				<a href=".\codes_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">Codes</a>
+			</ul>
+		</nav>
+		<pre style="background:#C9CABB;margin-left:5%;margin-right:5%;">
+		<code>
+use LWP::Simple;
+use File::Slurp;
+
+#system "rm -r out" if (-d "out");
+#mkdir("out");
+
+unlink("description_sce.csv") if (-e "description_sce.csv");
+open(OUT, ">>description_sce.csv") or die $!;
+
+$gene = "pep_ascleaned.fa";
+
+@line = read_file($gene);
+@id = grep(/>/, @line);
+@id = grep(/Sce\_\_/, @id);
+CYC2:foreach $id(@id) 
+{
+	$id =~ s/>|\s+|Sce\_\_//g;
+	print "$id\n";
+	#@idword = split(/\./, $id_raw);
+	#$id = $idword[0];
+	$times = 0;
+	CYC1:{
+		$webcont = get \
+		("http://fungi.ensembl.org/Saccharomyces_cerevisiae/Gene/Summary?g=$id");	
+	     }
+	if(! defined($webcont))
+	{		
+		$times++;
+		sleep(5);
+		if($times > 2)
+		{
+			print "\t$tick open webpage failed.\n";
+			next CYC2;
+		}	
+		print "\t$tick try $times times.\n"; 
+		goto CYC1;
+	}
+	@webline = split(/\n|\r/, $webcont);
+#	open(OUT1, ">out/$id") or die $!;
+#	print OUT1 $webcont;
+#	close(OUT1);
+	
+	CYC3:for($i = 0; $i <= $#webline; $i++)
+	{
+		if($webline[$i] =~ /\<title\>Gene\:/)
+		{
+			#print "$webline[$i]";
+			@webport1 = split(/\s+/, $webline[$i]);
+			$name = $webport1[2];
+		}
+		elsif($webline[$i] =~ /\>Description/)
+		{
+			@webport2 = split(/\<p\>|\s+\[/, $webline[$i]);
+			$descrip = $webport2[1];
+			print OUT "$id\tName\t$name\n\tDescription\t$descrip\n";
+			last CYC3;
+		}		
+	}
+			 
+}
+close(OUT);
+		</code>
+		</pre>
+	</div>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>pwanglab</title>
+		<link rel="short icon" style="image/x-icon" href="../logo2.ico"></link>
+	</head>
+<body style="background:#ffffff;">
+<pre style="background:#C9CABB;margin-left:5%;margin-right:5%;">
+<code>
+use File::Slurp;
+system "rm -r new/" if(-d "new/");
+mkdir("new/");
+
+open(OUT1, ">>desctip.txt") or die $!;
+@file = glob("in/*.fa");
+foreach $file(@file)
+{
+	print "$file\n";
+	@word = split(/\//, $file);
+	print OUT1 "$file..\n";
+	open(IN, $file) or die $!;
+	open(OUT, ">>new/$word[1]") or die $!;
+	while($line = <IN>)
+	{		
+		if($line =~ />/)
+		{
+			$line =~ s/>//;
+			@lineword = split(/\:|\s+/, $line);
+			$lineword = $lineword[0];
+			$lineword =~ s/\;//g;		#may vary.								
+			if($file =~ /orysa/)
+			{
+				$lineword =~ s/LOC\_//;
+			}
+			elsif($file =~ /zeama/)
+			{
+				$lineword =~ s/\_P/\_T/;
+			}							
+			print OUT1 $line;
+			print OUT ">$lineword\n";
+		}
+		else
+		{
+			$line =~ s/\*|\||\$|\#//g;
+			print OUT $line;
+		}
+	}
+	close(IN);
+	close(OUT);
+	print OUT1 "\/\/\n";
+}	
+</code>
+</pre>
+</body>

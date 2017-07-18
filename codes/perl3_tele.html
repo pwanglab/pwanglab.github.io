@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	</head>
+<body style="background:#ffffff;">
+	<div style="margin: 0 auto;weight:wrap;height:100vh;>
+		<br/>
+		<a href="../home_tele.html" style="height:150px;margin-left:15%;"><img src="../logo.png"></img></a>
+		<nav style="margin: 0 auto; width: wrap; text-align: center;margin-top:20px">
+			<ul style="padding: 0px; list-style: none; font-weight: bold; margin: auto; margin-bottom: 20px;">
+				<a href="..\research\research_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none;font-size:">Research</a>
+				<a href="..\publications\publications_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">Publications</a>
+				<a href="..\people\people_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">People</a>
+				<a href=".\codes_tele.html" style="display: inline; margin-right: 50px; color:#D9B316;text-decoration: none">Codes</a>
+			</ul>
+		</nav>
+		<pre style="background:#C9CABB;margin-left:5%;margin-right:5%;">
+		<code>
+@cdsfile = glob("*\_cds.fa");
+open(OUT, ">>z_description_line.csv") or die $!;
+foreach $cdsfile(@cdsfile)
+{
+	@cdsline = @pepline = ();
+	$pepfile = $cdsfile;
+	$pepfile =~ s/\_cds//;
+	print "$pepfile\n";
+	print OUT $pepfile;
+	open(PEP, $pepfile) or die $!;
+	$a = 0;
+	CYC1:while($line = <PEP>)
+	{
+		
+		if($line =~ />/)
+		{
+			$a++;
+			chomp($line);
+			push(@pepline, $line);
+		}
+		last CYC1 if ($a > 5);
+	}
+	open(CDS, $cdsfile) or die $!;
+	$a = 0;
+	CYC2:while($line = <CDS>)
+	{
+		
+		if($line =~ />/)
+		{
+			$a++;
+			chomp($line);
+			push(@cdsline, $line);
+		}
+		last CYC2 if ($a > 5);
+	}
+	close(PEP);
+	close(CDS);
+	for($i = 0; $i <= $#pepline; $i++)
+	{
+		print OUT "\t$pepline[$i]\t$cdsline[$i]\n";
+	}
+}
+close(OUT);
+		</code>
+		</pre>
+	</div>
+</body>
+</html>
